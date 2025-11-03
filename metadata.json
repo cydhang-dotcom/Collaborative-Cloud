@@ -1,0 +1,5 @@
+{
+  "name": "Business Confirmation Dashboard",
+  "description": "A dashboard interface for a business collaboration platform, allowing users to view and manage business orders, payment statuses, and related tasks.",
+  "requestFramePermissions": []
+}
