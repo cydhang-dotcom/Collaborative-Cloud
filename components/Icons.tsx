@@ -25,6 +25,11 @@ const iconPaths: Record<IconName, { path: React.JSX.Element; viewBox?: string; f
     checkCircleSolid: { path: <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />, viewBox: '0 0 20 20', fill: 'currentColor', stroke: 'none' },
     x: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> },
     informationCircle: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    paperAirplane: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /> },
+    eye: { path: <><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></> },
+    refresh: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 4a15.89 15.89 0 0113.89 13.89M20 20a15.89 15.89 0 01-13.89-13.89" /> },
+    chevronLeft: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /> },
+    chevronRight: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /> },
 };
 
 interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, 'name'> {
