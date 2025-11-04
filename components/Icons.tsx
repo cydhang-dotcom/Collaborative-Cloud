@@ -30,6 +30,7 @@ const iconPaths: Record<IconName, { path: React.JSX.Element; viewBox?: string; f
     refresh: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 4a15.89 15.89 0 0113.89 13.89M20 20a15.89 15.89 0 01-13.89-13.89" /> },
     chevronLeft: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /> },
     chevronRight: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /> },
+    triangle: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2.25L2.25 21h19.5L12 2.25z" /> },
 };
 
 interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, 'name'> {

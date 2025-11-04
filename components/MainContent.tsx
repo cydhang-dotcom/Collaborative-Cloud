@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Person, Step, IconName, Recipient, PageName } from '../types';
 import { Icon } from './Icons';
 import Stepper from './Stepper';
@@ -198,17 +198,27 @@ const SummaryCard: React.FC<{ title: string; amount: number; icon: IconName; }> 
         <div>
             <p className="text-sm text-gray-500">{title}</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
-                {amount.toFixed(2)}
+                {amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 <span className="text-base font-normal text-gray-500 ml-1">元</span>
             </p>
         </div>
     </div>
 );
 
-const UserInfoCell: React.FC<{ person: Person }> = ({ person }) => {
+const UserInfoCell: React.FC<{ person: Person | Recipient }> = ({ person }) => {
+  const maskIdNumber = (id: string) => {
+    if (id && id.length > 8) {
+      return `${id.substring(0, 4)}**********${id.substring(id.length - 4)}`;
+    }
+    return id;
+  };
   return (
-    <div className="relative group py-4">
-      <span className="cursor-pointer text-gray-600">{`**** **** ${person.accountNumber.slice(-4)}`}</span>
+    <div className="relative group py-2">
+      <div>
+        <p className="text-gray-800 text-sm whitespace-nowrap">{person.bank}: {person.accountNumber}</p>
+        <p className="text-gray-500 text-xs mt-1">手机号: {person.phone}</p>
+        <p className="text-gray-500 text-xs mt-1">身份证号: {maskIdNumber(person.id)}</p>
+      </div>
       <div className="absolute left-0 bottom-full mb-2 w-max max-w-sm p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
         <p className="font-semibold">详细信息</p>
         <hr className="border-gray-600 my-1" />
@@ -363,32 +373,129 @@ const DataTable: React.FC<{
     </div>
 );
 
-const Breadcrumbs: React.FC<{ items: string[] }> = ({ items }) => (
-  <nav className="text-sm mb-4 text-gray-500" aria-label="Breadcrumb">
-    <ol className="list-none p-0 inline-flex">
-      {items.map((item, index) => (
-        <li key={item} className="flex items-center">
-          <a href="#" className={`hover:text-gray-700 ${index === items.length - 1 ? 'text-gray-800 font-medium' : ''}`}>{item}</a>
-          {index < items.length - 1 && <span className="mx-2">/</span>}
-        </li>
-      ))}
-    </ol>
-  </nav>
-);
-
-const InfoItem: React.FC<{ title: string; value: string; unit: string; }> = ({ title, value, unit }) => (
-    <div className="p-4">
-        <p className="text-sm text-gray-500">{title}</p>
-        <p className="text-xl font-bold text-gray-900 mt-1">
-            {value}
-            <span className="text-base font-normal text-gray-500 ml-1">{unit}</span>
-        </p>
+const DetailRowDisplay: React.FC<{ label: string; value: number; }> = ({ label, value }) => (
+    <div className="flex justify-between items-center py-1">
+        <span className="text-gray-500">{label}</span>
+        <span className="text-gray-800">{value.toFixed(2)}</span>
     </div>
 );
 
+const ReadOnlyDetailsModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    recipient: Recipient | null;
+}> = ({ isOpen, onClose, recipient }) => {
+    
+    const calculations = useMemo(() => {
+        if (!recipient) return null;
+        
+        const { laborRemuneration, businessIncome, soleProprietorIncome, serviceFee } = recipient;
+        const totalAmountDue = laborRemuneration + businessIncome + soleProprietorIncome;
+        const serviceFeeRate = totalAmountDue > 0 ? serviceFee / totalAmountDue : 0;
+
+        const laborServiceFee = laborRemuneration * serviceFeeRate;
+        const laborTax = laborRemuneration * 0.10;
+        const laborVat = 0;
+
+        const businessServiceFee = businessIncome * serviceFeeRate;
+        const businessTax = 0;
+        const businessVat = businessIncome * 0.03;
+
+        const soleServiceFee = soleProprietorIncome * serviceFeeRate;
+        const soleTax = 0;
+        const soleVat = soleProprietorIncome * 0.03;
+        
+        return {
+            laborServiceFee, laborTax, laborVat,
+            businessServiceFee, businessTax, businessVat,
+            soleServiceFee, soleTax, soleVat,
+        };
+    }, [recipient]);
+    
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => {
+           if (event.key === 'Escape') {
+              onClose();
+           }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+           window.removeEventListener('keydown', handleEsc);
+        };
+    }, [onClose]);
+
+    if (!isOpen || !recipient || !calculations) return null;
+
+    return (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50" onClick={onClose} role="dialog" aria-modal="true">
+            <div className="relative mx-auto p-8 border w-full max-w-2xl shadow-lg rounded-xl bg-white" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">详细费用明细 - {recipient.name}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <Icon name="x" className="w-6 h-6" />
+                    </button>
+                </div>
+                
+                <div className="space-y-6">
+                    <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-semibold text-gray-700 mb-2">劳务报酬部分</h4>
+                        <DetailRowDisplay label="金额" value={recipient.laborRemuneration} />
+                        <DetailRowDisplay label="服务费" value={calculations.laborServiceFee} />
+                        <DetailRowDisplay label="个税" value={calculations.laborTax} />
+                        <DetailRowDisplay label="增值税" value={calculations.laborVat} />
+                    </div>
+                    <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-semibold text-gray-700 mb-2">经营所得部分</h4>
+                        <DetailRowDisplay label="金额" value={recipient.businessIncome} />
+                        <DetailRowDisplay label="服务费" value={calculations.businessServiceFee} />
+                        <DetailRowDisplay label="个税" value={calculations.businessTax} />
+                        <DetailRowDisplay label="增值税" value={calculations.businessVat} />
+                    </div>
+                    <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-semibold text-gray-700 mb-2">个体户部分</h4>
+                        <DetailRowDisplay label="金额" value={recipient.soleProprietorIncome} />
+                        <DetailRowDisplay label="服务费" value={calculations.soleServiceFee} />
+                        <DetailRowDisplay label="个税" value={calculations.soleTax} />
+                        <DetailRowDisplay label="增值税" value={calculations.soleVat} />
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t">
+                        <div className="flex justify-between items-center text-lg font-semibold">
+                            <span className="text-gray-600">税后总金额</span>
+                            <span className="text-teal-600">{recipient.actualAmount.toFixed(2)} 元</span>
+                        </div>
+                         <div className="flex justify-between items-center text-lg font-bold mt-2">
+                            <span className="text-gray-800">订单总金额</span>
+                            <span className="text-gray-900">{recipient.orderAmount.toFixed(2)} 元</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end items-center mt-8 space-x-3">
+                    <button onClick={onClose} className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">关闭</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const IssuanceDetailsPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
+    
+    const handleOpenDetails = (recipient: Recipient) => {
+        setSelectedRecipient(recipient);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedRecipient(null);
+    };
+    
     const steps: Step[] = [
-        { name: '业务确认', icon: 'paperAirplane', status: 'completed' },
+        { name: '业务确认', icon: 'triangle', status: 'completed' },
         { name: '平台风控', icon: 'eye', status: 'completed' },
         { name: '确认发放', icon: 'checkCircle', status: 'current' },
         { name: '发放中', icon: 'checkCircle', status: 'upcoming' },
@@ -396,130 +503,127 @@ const IssuanceDetailsPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     ];
 
     const recipients: Recipient[] = [
-      { name: '徐晨露', status: '正常', id: '320322199212170029', phone: '15002106134', task: '云才网络...', bank: '中国银行', accountNumber: '6217850800019685732', amountDue: 10000, actualAmount: 10000, orderAmount: 10636 },
-      { name: '陈莉', status: '正常', id: '320681198911010085', phone: '15001974427', task: '云才网络...', bank: '招商银行', accountNumber: '6214852114742441', amountDue: 3000, actualAmount: 3000, orderAmount: 3190.8 }
+      { name: '徐晨露', status: '正常', id: '320322199212170029', phone: '15002106134', task: '云才网络...', bank: '中国银行', accountNumber: '6217850800019685732', amountDue: 10000, actualAmount: 9364, orderAmount: 10636, laborRemuneration: 4800, businessIncome: 5200, soleProprietorIncome: 0, serviceFee: 500, personalIncomeTax: 480, vat: 156 },
+      { name: '陈莉', status: '正常', id: '320681198911010085', phone: '15001974427', task: '云才网络...', bank: '招商银行', accountNumber: '6214852114742441', amountDue: 3000, actualAmount: 2809.2, orderAmount: 3190.8, laborRemuneration: 1440, businessIncome: 1560, soleProprietorIncome: 0, serviceFee: 150, personalIncomeTax: 144, vat: 46.8 }
     ];
 
     return (
         <div className="bg-white p-8 rounded-xl shadow-md">
-            <Breadcrumbs items={['班步协作', '发放状态', '发放明细']} />
-            
-            <div className="my-8">
+            <div className="mb-8">
                 <Stepper steps={steps} />
             </div>
 
-            <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-800">发放内容: 2025-11 第1批 (“云才网络-UI设计服务”)
-                  <span className="ml-3 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">经营所得</span>
-                </h3>
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg text-blue-800">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <Icon name="informationCircle" className="w-5 h-5 mr-3 text-blue-400" />
-                        </div>
-                        <div className="text-sm">
-                            <p className="font-semibold">此订单已经通过平台风控确认，可继续发放。</p>
-                            <p>发放前，请确认余额是否充足，点击确认后，订单所对应的资金将被冻结，等待终端承揽者确认任务成果后发放。</p>
-                        </div>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-3xl font-bold text-gray-900">发放明细</h2>
+                    <div className="flex items-center space-x-6 text-sm text-gray-500 mt-2">
+                        <span>发放内容: 2025-11 第1批 (“云才网络-UI设计服务”)</span>
+                        <span className="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-semibold">经营所得</span>
                     </div>
-                </div>
-            </div>
-
-            <div className="border rounded-lg bg-gray-50 mb-8">
-                <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-800">订单信息</h3>
-                    <div className="text-sm text-gray-600 space-y-1 mt-2">
-                        <p>风控时间: 2025-11-04 13:25</p>
-                        <p>提交时间: 2025-11-04 13:25</p>
-                        <p>订单月: 2025-11</p>
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 text-center divide-x divide-gray-200 border-t bg-white rounded-b-lg">
-                    <InfoItem title="订单总额" value="13826.80" unit="元" />
-                    <InfoItem title="应发总额" value="13000.00" unit="元" />
-                    <InfoItem title="实发总额" value="13000.00" unit="元" />
-                    <InfoItem title="服务费" value="0.00" unit="元" />
                 </div>
             </div>
             
-            <div className="mb-8">
-              <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                  <table className="w-full text-sm text-left text-gray-500">
-                      <thead className="text-xs text-gray-600 font-semibold bg-gray-50">
-                          <tr>
-                              <th className="px-4 py-3">姓名</th>
-                              <th className="px-4 py-3">身份证号码</th>
-                              <th className="px-4 py-3">手机号</th>
-                              <th className="px-4 py-3">任务</th>
-                              <th className="px-4 py-3">开户行</th>
-                              <th className="px-4 py-3">收款方账号</th>
-                              <th className="px-4 py-3 text-right">应发金额</th>
-                              <th className="px-4 py-3 text-right">实发金额</th>
-                              <th className="px-4 py-3 text-right">订单金额</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {recipients.map((p, i) => (
-                              <tr key={i} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
-                                  <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                                      {p.name}
-                                      <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">{p.status}</span>
-                                  </td>
-                                  <td className="px-4 py-3">{p.id}</td>
-                                  <td className="px-4 py-3">{p.phone}</td>
-                                  <td className="px-4 py-3">{p.task}</td>
-                                  <td className="px-4 py-3">{p.bank}</td>
-                                  <td className="px-4 py-3">{p.accountNumber}</td>
-                                  <td className="px-4 py-3 text-right">{p.amountDue.toFixed(2)}</td>
-                                  <td className="px-4 py-3 text-right">{p.actualAmount.toFixed(2)}</td>
-                                  <td className="px-4 py-3 text-right">{p.orderAmount.toFixed(2)}</td>
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
-              <div className="flex justify-between items-center mt-4 text-sm">
-                  <p className="text-gray-600">共 {recipients.length} 条记录</p>
-                  <div className="inline-flex items-center">
-                    <span className="text-gray-600 mr-4">10 条/页</span>
-                    <div className="flex items-center space-x-1">
-                        <button className="p-2 text-gray-500 rounded-md hover:bg-gray-100 disabled:opacity-50" disabled>
-                            <Icon name="chevronLeft" className="w-4 h-4" />
-                        </button>
-                        <button className="px-3 py-1 bg-teal-500 text-white rounded-md text-xs font-semibold">1</button>
-                        <button className="p-2 text-gray-500 rounded-md hover:bg-gray-100 disabled:opacity-50" disabled>
-                            <Icon name="chevronRight" className="w-4 h-4" />
-                        </button>
+            <div className="mb-8 p-4 bg-gray-50 rounded-lg text-gray-700">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <Icon name="informationCircle" className="w-5 h-5 mr-3 text-gray-400" />
                     </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-gray-200 space-y-6">
-                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center text-sm">
-                        <span className="text-gray-600">账户可用余额</span>
-                        <strong className="text-lg font-bold text-gray-900 mx-2">0.00 元</strong>
-                        <button className="text-gray-400 hover:text-gray-600 focus:outline-none">
-                            <Icon name="refresh" className="w-4 h-4" />
-                        </button>
-                        <span className="w-px h-4 bg-gray-300 mx-4"></span>
-                        <span className="text-gray-600">还需充值</span>
-                        <strong className="text-lg font-bold text-red-600 mx-2">13826.80 元</strong>
-                    </div>
-                    <button className="px-5 py-2 text-sm font-medium border border-teal-500 text-teal-600 rounded-lg hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400">充值</button>
-                </div>
-
-                <div className="flex justify-end items-center">
-                    <div className="flex items-center space-x-3">
-                        <button onClick={onBack} className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">返回列表</button>
-                        <button className="px-8 py-2 text-sm font-medium bg-teal-500 text-white rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-sm">确认发放</button>
-                        <button className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">下载付款通知书</button>
-                        <button className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">下载支付明细</button>
-                        <button className="px-5 py-2 text-sm font-medium border border-red-500 text-red-600 rounded-lg hover:bg-red-50">作废</button>
+                    <div className="text-sm">
+                        <p>此订单已经通过平台风控确认，可继续发放。</p>
+                        <p>发放前，请确认余额是否充足，点击确认后，订单所对应的资金将被冻结，等待终端承揽者确认任务成果后发放。</p>
                     </div>
                 </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <SummaryCard title="订单总金额" amount={13826.80} icon="wallet" />
+                <SummaryCard title="应发总金额" amount={13000.00} icon="documentText" />
+                <SummaryCard title="总服务费" amount={650.00} icon="briefcase" />
+                <SummaryCard title="总税费" amount={826.80} icon="scale" />
+            </div>
+
+            <div>
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-600 font-semibold bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-3">姓名</th>
+                                <th className="px-4 py-3">人员信息</th>
+                                <th className="px-4 py-3 text-right">应发总金额</th>
+                                <th className="px-4 py-3 text-right">税后总金额</th>
+                                <th className="px-4 py-3 text-right">订单总金额</th>
+                                <th className="px-4 py-3 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recipients.map((p, i) => (
+                                <tr key={i} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
+                                    <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                        {p.name}
+                                        <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">{p.status}</span>
+                                    </td>
+                                    <td className="px-4 py-0"><UserInfoCell person={p} /></td>
+                                    <td className="px-4 py-3 text-right">{p.amountDue.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right font-medium text-teal-600">{p.actualAmount.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right font-bold text-gray-900">{p.orderAmount.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        <button onClick={() => handleOpenDetails(p)} className="font-medium text-teal-600 hover:underline">详细</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="flex justify-between items-center mt-4 text-sm">
+                    <p className="text-gray-600">共 {recipients.length} 条记录</p>
+                     <div className="flex items-center">
+                        <span className="text-gray-600 mr-4">10 条/页</span>
+                        <div className="flex items-center space-x-1">
+                            <button className="p-2 text-gray-400 rounded-md hover:bg-gray-100 disabled:text-gray-300" disabled>
+                                <Icon name="chevronLeft" className="w-4 h-4" />
+                            </button>
+                            <button className="px-3 py-1 bg-teal-500 text-white rounded-md text-xs font-semibold">1</button>
+                            <button className="p-2 text-gray-400 rounded-md hover:bg-gray-100 disabled:text-gray-300" disabled>
+                                <Icon name="chevronRight" className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                {/* Left-aligned secondary actions */}
+                <div className="flex items-center space-x-2">
+                    <button className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">下载付款通知书</button>
+                    <button className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">下载支付明细</button>
+                    <button className="px-4 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50">作废</button>
+                </div>
+
+                {/* Right-aligned primary actions and context */}
+                <div className="flex items-center space-x-4">
+                    <div className="text-sm text-right">
+                        <div className="flex items-center justify-end">
+                            <span className="text-gray-600">账户可用余额:</span>
+                            <strong className="font-semibold text-gray-900 ml-2">0.00 元</strong>
+                            <button className="text-gray-400 hover:text-gray-600 focus:outline-none ml-1">
+                                <Icon name="refresh" className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="mt-1">
+                            <span className="text-gray-500">还需充值:</span>
+                            <strong className="font-semibold text-red-600 ml-2">13826.80 元</strong>
+                        </div>
+                    </div>
+                    <button className="px-5 py-2 text-sm font-medium border border-teal-500 text-teal-600 rounded-lg hover:bg-teal-50 focus:outline-none">充值</button>
+                    <button onClick={onBack} className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">返回列表</button>
+                    <button className="px-8 py-2 text-sm font-medium bg-teal-500 text-white rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-sm hover:shadow-md transition-shadow">确认发放</button>
+                </div>
+            </div>
+            <ReadOnlyDetailsModal 
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                recipient={selectedRecipient}
+            />
         </div>
     );
 };

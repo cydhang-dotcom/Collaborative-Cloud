@@ -8,7 +8,7 @@ export type IconName =
   | 'documentAdd' | 'clipboardCheck' | 'creditCard' | 'checkCircle'
   | 'wallet' | 'documentText' | 'briefcase' | 'scale' | 'checkCircleSolid'
   | 'x' | 'informationCircle' | 'paperAirplane' | 'eye'
-  | 'refresh' | 'chevronLeft' | 'chevronRight';
+  | 'refresh' | 'chevronLeft' | 'chevronRight' | 'triangle';
 
 
 export interface Person {
@@ -40,6 +40,13 @@ export interface Recipient {
   amountDue: number;
   actualAmount: number;
   orderAmount: number;
+  // Fields for details modal
+  laborRemuneration: number;
+  businessIncome: number;
+  soleProprietorIncome: number;
+  serviceFee: number;
+  personalIncomeTax: number;
+  vat: number;
 }
 
 

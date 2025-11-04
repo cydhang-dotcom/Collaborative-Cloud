@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Icon } from './Icons';
 
@@ -22,7 +21,7 @@ const Header: React.FC = () => {
             <button className="text-gray-500 hover:text-gray-700">
                 <Icon name="bell" className="w-6 h-6" />
             </button>
-            <span className="absolute -top-2 -right-3 flex items-center justify-center h-5 w-5 bg-red-500 text-white text-xs rounded-full">46</span>
+            <span className="absolute -top-2 -right-3 flex items-center justify-center h-5 w-5 bg-red-500 text-white text-xs rounded-full">48</span>
         </div>
         <div className="flex items-center">
             <Icon name="userCircle" className="w-6 h-6 text-gray-300" />
