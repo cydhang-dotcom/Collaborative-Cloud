@@ -14,6 +14,7 @@ export interface Person {
   serviceFee: number;
   personalIncomeTax: number;
   vat: number;
+  netAmount: number;
   totalOrderAmount: number;
 }
 

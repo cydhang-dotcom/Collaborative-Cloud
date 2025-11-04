@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Person, Step } from '../types';
-import { DocumentAddIcon, ClipboardCheckIcon, CreditCardIcon, CheckCircleIcon, WalletIcon, DocumentTextIcon, BriefcaseIcon, ScaleIcon, PencilIcon } from './Icons';
+import { PencilIcon, DocumentAddIcon, ClipboardCheckIcon, CreditCardIcon, CheckCircleIcon, WalletIcon, DocumentTextIcon, BriefcaseIcon, ScaleIcon } from './Icons';
 import Stepper from './Stepper';
 import DetailsModal from './DetailsModal';
 
@@ -22,7 +22,7 @@ const SummaryCard: React.FC<{ title: string; amount: number; icon: React.FC<{ cl
 const UserInfoCell: React.FC<{ person: Person }> = ({ person }) => {
   return (
     <div className="relative group py-4">
-      <span className="cursor-help text-gray-600 border-b border-dotted border-gray-400 pb-0.5">{`**** **** ${person.accountNumber.slice(-4)}`}</span>
+      <span className="cursor-pointer text-gray-600">{`**** **** ${person.accountNumber.slice(-4)}`}</span>
       <div className="absolute left-0 bottom-full mb-2 w-max max-w-sm p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
         <p className="font-semibold">详细信息</p>
         <hr className="border-gray-600 my-1" />
@@ -36,74 +36,70 @@ const UserInfoCell: React.FC<{ person: Person }> = ({ person }) => {
   );
 };
 
-const EditableAmountCell: React.FC<{ initialValue: number; onSave: (newValue: number) => void; }> = ({ initialValue, onSave }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [value, setValue] = useState(initialValue.toFixed(2));
-    const inputRef = useRef<HTMLInputElement>(null);
+const EditableAmountCell: React.FC<{ value: number; onSave: (newValue: number) => void; }> = ({ value, onSave }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentValue, setCurrentValue] = useState(value.toFixed(2));
+  const inputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        setValue(initialValue.toFixed(2));
-    }, [initialValue]);
-    
-    useEffect(() => {
-        if (isEditing) {
-            inputRef.current?.focus();
-            inputRef.current?.select();
-        }
-    }, [isEditing]);
-
-    const handleSave = () => {
-        const numericValue = parseFloat(value);
-        if (!isNaN(numericValue) && numericValue !== initialValue) {
-            onSave(numericValue);
-        } else {
-            setValue(initialValue.toFixed(2)); // Revert if invalid or unchanged
-        }
-        setIsEditing(false);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            handleSave();
-        } else if (e.key === 'Escape') {
-            setValue(initialValue.toFixed(2));
-            setIsEditing(false);
-        }
-    };
-
+  useEffect(() => {
     if (isEditing) {
-        return (
-            <input
-                ref={inputRef}
-                type="number"
-                step="0.01"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onBlur={handleSave}
-                onKeyDown={handleKeyDown}
-                className="w-full px-1 py-0.5 border border-teal-300 rounded-md text-right text-sm bg-white focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-            />
-        );
+      inputRef.current?.focus();
+      inputRef.current?.select();
     }
+  }, [isEditing]);
+  
+  useEffect(() => {
+    setCurrentValue(value.toFixed(2));
+  }, [value]);
 
+  const handleBlur = () => {
+    const numericValue = parseFloat(currentValue);
+    if (!isNaN(numericValue)) {
+      onSave(numericValue);
+    } else {
+        setCurrentValue(value.toFixed(2));
+    }
+    setIsEditing(false);
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    } else if (e.key === 'Escape') {
+      setCurrentValue(value.toFixed(2));
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
     return (
-        <div 
-            onClick={() => setIsEditing(true)} 
-            className="w-full h-full p-1 rounded-md cursor-pointer text-right flex items-center justify-end space-x-2"
-        >
-            <span className="pb-0.5 border-b border-dashed border-gray-400 transition-colors">
-                {initialValue.toFixed(2)}
-            </span>
-            <PencilIcon className="w-3.5 h-3.5 text-gray-400 transition-opacity" />
-        </div>
+      <input
+        ref={inputRef}
+        type="number"
+        value={currentValue}
+        onChange={(e) => setCurrentValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className="w-24 p-1 border rounded bg-white text-right shadow-inner"
+      />
     );
+  }
+
+  return (
+    <div onClick={() => setIsEditing(true)} className="cursor-pointer flex items-center justify-end group h-full">
+      <span>{value.toFixed(2)}</span>
+      <PencilIcon className="w-3 h-3 text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+    </div>
+  );
 };
+
 
 const DataTable: React.FC<{ 
     data: Person[];
-    onOpenDetails: (index: number) => void;
-    onAmountChange: (personIndex: number, field: keyof Person, value: number) => void;
-}> = ({ data, onOpenDetails, onAmountChange }) => (
+    onAmountChange: (index: number, field: 'laborRemuneration' | 'businessIncome' | 'soleProprietorIncome', value: number) => void;
+    onTotalAmountChange: (index: number, value: number) => void;
+    onDetailsClick: (index: number) => void;
+}> = ({ data, onAmountChange, onTotalAmountChange, onDetailsClick }) => (
     <div className="overflow-x-auto border border-gray-200 rounded-lg">
         <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-600 font-semibold bg-gray-50">
@@ -112,6 +108,7 @@ const DataTable: React.FC<{
                     <th rowSpan={2} scope="col" className="px-4 py-3 align-middle text-left border-r border-gray-200">人员信息</th>
                     <th colSpan={4} scope="colgroup" className="px-4 py-3 text-center border-x border-gray-200">个人所得明细</th>
                     <th colSpan={3} scope="colgroup" className="px-4 py-3 text-center border-x border-gray-200">平台及税务费用</th>
+                    <th rowSpan={2} scope="col" className="px-4 py-3 text-right align-middle">税后总金额</th>
                     <th rowSpan={2} scope="col" className="px-4 py-3 text-right align-middle bg-gray-100 border-x border-gray-200">订单总金额</th>
                     <th rowSpan={2} scope="col" className="px-4 py-3 text-center align-middle border-l border-gray-200">操作</th>
                 </tr>
@@ -133,35 +130,29 @@ const DataTable: React.FC<{
                         <td className="px-4 py-0 border-r border-gray-200"><UserInfoCell person={person} /></td>
                         
                         {/* 个人所得明细 Group */}
-                        <td className="px-2 py-1 align-middle text-right border-l border-gray-200">
-                           <EditableAmountCell 
-                                initialValue={person.laborRemuneration}
-                                onSave={(newValue) => onAmountChange(index, 'laborRemuneration', newValue)}
-                           />
+                        <td className="px-4 py-2 text-right border-l border-gray-200">
+                           <EditableAmountCell value={person.laborRemuneration} onSave={(val) => onAmountChange(index, 'laborRemuneration', val)} />
                         </td>
-                        <td className="px-2 py-1 align-middle text-right">
-                           <EditableAmountCell 
-                                initialValue={person.businessIncome}
-                                onSave={(newValue) => onAmountChange(index, 'businessIncome', newValue)}
-                           />
+                        <td className="px-4 py-2 text-right">
+                           <EditableAmountCell value={person.businessIncome} onSave={(val) => onAmountChange(index, 'businessIncome', val)} />
                         </td>
-                        <td className="px-2 py-1 align-middle text-right">
-                            <EditableAmountCell 
-                                initialValue={person.soleProprietorIncome}
-                                onSave={(newValue) => onAmountChange(index, 'soleProprietorIncome', newValue)}
-                            />
+                        <td className="px-4 py-2 text-right">
+                           <EditableAmountCell value={person.soleProprietorIncome} onSave={(val) => onAmountChange(index, 'soleProprietorIncome', val)} />
                         </td>
-                        <td className="px-4 py-2 align-middle text-right font-semibold text-gray-800 bg-gray-50 border-x border-gray-200">{person.totalAmountDue.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right bg-gray-50 border-x border-gray-200">
+                            <EditableAmountCell value={person.totalAmountDue} onSave={(val) => onTotalAmountChange(index, val)} />
+                        </td>
 
                         {/* 平台及税务费用 Group */}
-                        <td className="px-4 py-2 align-middle text-right">{person.serviceFee.toFixed(2)}</td>
-                        <td className="px-4 py-2 align-middle text-right">{person.personalIncomeTax.toFixed(2)}</td>
-                        <td className="px-4 py-2 align-middle text-right border-r border-gray-200">{person.vat.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">{person.serviceFee.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">{person.personalIncomeTax.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right border-r border-gray-200">{person.vat.toFixed(2)}</td>
                         
-                        <td className="px-4 py-2 align-middle text-right font-bold text-gray-900 bg-gray-100 border-x border-gray-200">{person.totalOrderAmount.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right font-medium text-teal-600">{person.netAmount.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right font-bold text-gray-900 bg-gray-100 border-x border-gray-200">{person.totalOrderAmount.toFixed(2)}</td>
 
-                        <td className="px-4 py-2 align-middle text-center border-l border-gray-200">
-                            <a href="#" onClick={(e) => { e.preventDefault(); onOpenDetails(index); }} className="font-medium text-teal-600 hover:underline">详细</a>
+                        <td className="px-4 py-2 text-center border-l border-gray-200">
+                            <button onClick={() => onDetailsClick(index)} className="font-medium text-teal-600 hover:underline">详细</button>
                         </td>
                     </tr>
                 ))}
@@ -172,13 +163,14 @@ const DataTable: React.FC<{
 
 
 const MainContent: React.FC = () => {
-    type RawPerson = Omit<Person, 'totalAmountDue' | 'serviceFee' | 'personalIncomeTax' | 'vat' | 'totalOrderAmount'>
+    type RawPerson = Omit<Person, 'totalAmountDue' | 'serviceFee' | 'personalIncomeTax' | 'vat' | 'totalOrderAmount' | 'netAmount'>
 
     const calculateFinancials = (person: RawPerson): Person => {
         const totalAmountDue = person.laborRemuneration + person.businessIncome + person.soleProprietorIncome;
         const serviceFee = totalAmountDue * 0.05; // 5% service fee
         const personalIncomeTax = person.laborRemuneration * 0.10; // 10% tax on labor
         const vat = (person.businessIncome + person.soleProprietorIncome) * 0.03; // 3% VAT on business/sole income
+        const netAmount = totalAmountDue - serviceFee - personalIncomeTax - vat;
         const totalOrderAmount = totalAmountDue + serviceFee + personalIncomeTax + vat;
         
         return {
@@ -187,6 +179,7 @@ const MainContent: React.FC = () => {
             serviceFee,
             personalIncomeTax,
             vat,
+            netAmount,
             totalOrderAmount,
         };
     };
@@ -196,11 +189,14 @@ const MainContent: React.FC = () => {
       { name: '陈莉', id: '320681198911010085', phone: '15001974427', task: '后端开发', bank: '招商银行', accountNumber: '6214852114742441', laborRemuneration: 8000, businessIncome: 0, soleProprietorIncome: 4000 },
     ];
     
+    const initialDataRef = useRef(initialDataRaw.map(calculateFinancials));
+
     const [tableData, setTableData] = useState<Person[]>(initialDataRaw.map(calculateFinancials));
+    
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPersonIndex, setSelectedPersonIndex] = useState<number | null>(null);
 
-    const handleOpenModal = (index: number) => {
+    const handleOpenDetails = (index: number) => {
         setSelectedPersonIndex(index);
         setIsModalOpen(true);
     };
@@ -210,26 +206,80 @@ const MainContent: React.FC = () => {
         setSelectedPersonIndex(null);
     };
 
-    const handleTableCellChange = (personIndex: number, field: keyof Person, value: number) => {
+    const handleSaveChangesFromModal = (updatedAmounts: { laborRemuneration: number; businessIncome: number; soleProprietorIncome: number; }) => {
+        if (selectedPersonIndex === null) return;
+        
         setTableData(prevData => {
             const newData = [...prevData];
-            const personToUpdate = { ...newData[personIndex] };
-            (personToUpdate as any)[field] = value;
-            newData[personIndex] = calculateFinancials(personToUpdate);
+            const personToUpdate = newData[selectedPersonIndex];
+            
+            const updatedPersonRaw: RawPerson = {
+                ...personToUpdate,
+                laborRemuneration: updatedAmounts.laborRemuneration,
+                businessIncome: updatedAmounts.businessIncome,
+                soleProprietorIncome: updatedAmounts.soleProprietorIncome,
+            };
+            
+            newData[selectedPersonIndex] = calculateFinancials(updatedPersonRaw);
+            return newData;
+        });
+    
+        handleCloseModal();
+    };
+
+    const handleAmountChange = (index: number, field: 'laborRemuneration' | 'businessIncome' | 'soleProprietorIncome', value: number) => {
+        setTableData(prevData => {
+            const newData = [...prevData];
+            const updatedPersonRaw = { ...newData[index], [field]: value };
+            newData[index] = calculateFinancials(updatedPersonRaw);
             return newData;
         });
     };
-    
-    const handleSaveModal = (updatedPerson: Person) => {
-        if (selectedPersonIndex !== null) {
-            setTableData(prevData => {
-                const newData = [...prevData];
-                // Recalculate just in case, to ensure consistency
-                newData[selectedPersonIndex] = calculateFinancials(updatedPerson);
-                return newData;
-            });
-        }
-        handleCloseModal();
+
+    const handleTotalAmountChange = (index: number, newTotal: number) => {
+        setTableData(prevData => {
+            const newData = [...prevData];
+            const person = newData[index];
+            const initialPerson = initialDataRef.current[index];
+
+            const newLabor = Math.min(newTotal, 1500);
+            const remainder = Math.max(0, newTotal - newLabor);
+
+            let newBusiness = 0;
+            let newSole = 0;
+
+            const currentBusiness = person.businessIncome;
+            const currentSole = person.soleProprietorIncome;
+            let totalSub = currentBusiness + currentSole;
+
+            if (totalSub > 0) {
+                const businessRatio = currentBusiness / totalSub;
+                newBusiness = remainder * businessRatio;
+                newSole = remainder * (1 - businessRatio);
+            } else {
+                const initialBusiness = initialPerson.businessIncome;
+                const initialSole = initialPerson.soleProprietorIncome;
+                totalSub = initialBusiness + initialSole;
+
+                if (totalSub > 0) {
+                    const businessRatio = initialBusiness / totalSub;
+                    newBusiness = remainder * businessRatio;
+                    newSole = remainder * (1 - businessRatio);
+                } else {
+                    newBusiness = remainder;
+                }
+            }
+            
+            const updatedPersonRaw: RawPerson = {
+                ...person,
+                laborRemuneration: newLabor,
+                businessIncome: newBusiness,
+                soleProprietorIncome: newSole,
+            };
+            
+            newData[index] = calculateFinancials(updatedPersonRaw);
+            return newData;
+        });
     };
     
     const totals = tableData.reduce((acc, person) => {
@@ -246,6 +296,8 @@ const MainContent: React.FC = () => {
         { name: '付款确认', icon: CreditCardIcon, status: 'upcoming' },
         { name: '完成', icon: CheckCircleIcon, status: 'upcoming' },
     ];
+
+    const selectedPerson = selectedPersonIndex !== null ? tableData[selectedPersonIndex] : null;
 
     return (
         <div className="bg-white p-8 rounded-xl shadow-md">
@@ -273,11 +325,7 @@ const MainContent: React.FC = () => {
                 <SummaryCard title="总税费" amount={totals.taxes} icon={ScaleIcon} />
             </div>
             
-            <DataTable 
-                data={tableData} 
-                onOpenDetails={handleOpenModal}
-                onAmountChange={handleTableCellChange}
-            />
+            <DataTable data={tableData} onAmountChange={handleAmountChange} onTotalAmountChange={handleTotalAmountChange} onDetailsClick={handleOpenDetails} />
 
             <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -290,15 +338,12 @@ const MainContent: React.FC = () => {
                     <button className="px-8 py-2 text-sm font-medium bg-teal-500 text-white rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-sm hover:shadow-md transition-shadow">下一步</button>
                 </div>
             </div>
-            
-            {isModalOpen && selectedPersonIndex !== null && (
-                <DetailsModal
-                    isOpen={isModalOpen}
-                    person={tableData[selectedPersonIndex]}
-                    onClose={handleCloseModal}
-                    onSave={handleSaveModal}
-                />
-            )}
+            <DetailsModal 
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onSave={handleSaveChangesFromModal}
+                person={selectedPerson}
+            />
         </div>
     );
 };
