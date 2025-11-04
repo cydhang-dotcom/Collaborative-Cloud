@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Step } from '../types';
-import { CheckCircleIconSolid } from './Icons';
+import { Icon } from './Icons';
 
 const Stepper: React.FC<{ steps: Step[] }> = ({ steps }) => {
   return (
@@ -16,12 +16,12 @@ const Stepper: React.FC<{ steps: Step[] }> = ({ steps }) => {
             <React.Fragment key={step.name}>
               <div className="flex flex-col items-center text-center w-28 flex-shrink-0">
                 {isCompleted ? (
-                    <CheckCircleIconSolid className="w-10 h-10 text-teal-500" />
+                    <Icon name="checkCircleSolid" className="w-8 h-8 text-teal-500" />
                 ) : (
                     <div className={`w-10 h-10 flex items-center justify-center rounded-full border-2 ${
                         isCurrent ? 'border-teal-500 text-teal-500' : 'border-gray-300 text-gray-400'
                     }`}>
-                        <step.icon className="w-5 h-5" />
+                        <Icon name={step.icon} className="w-5 h-5" />
                     </div>
                 )}
                 <p className={`mt-2 text-sm font-medium ${

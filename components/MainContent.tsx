@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Person, Step } from '../types';
-import { PencilIcon, DocumentAddIcon, ClipboardCheckIcon, CreditCardIcon, CheckCircleIcon, WalletIcon, DocumentTextIcon, BriefcaseIcon, ScaleIcon } from './Icons';
+import { Person, Step, IconName } from '../types';
+import { Icon } from './Icons';
 import Stepper from './Stepper';
 import DetailsModal from './DetailsModal';
 
-const SummaryCard: React.FC<{ title: string; amount: number; icon: React.FC<{ className?: string }>; }> = ({ title, amount, icon: Icon }) => (
+const SummaryCard: React.FC<{ title: string; amount: number; icon: IconName; }> = ({ title, amount, icon }) => (
     <div className="flex-1 bg-white p-5 border border-gray-200 rounded-xl flex items-center space-x-4 hover:shadow-md transition-shadow">
         <div className="p-3 bg-teal-50 rounded-full">
-            <Icon className="w-6 h-6 text-teal-500" />
+            <Icon name={icon} className="w-6 h-6 text-teal-500" />
         </div>
         <div>
             <p className="text-sm text-gray-500">{title}</p>
@@ -88,7 +88,7 @@ const EditableAmountCell: React.FC<{ value: number; onSave: (newValue: number) =
   return (
     <div onClick={() => setIsEditing(true)} className="cursor-pointer flex items-center justify-end group h-full">
       <span>{value.toFixed(2)}</span>
-      <PencilIcon className="w-3 h-3 text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Icon name="pencil" className="w-4 h-4 text-gray-400 ml-1 opacity-40 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 };
@@ -105,10 +105,26 @@ const DataTable: React.FC<{
             <thead className="text-xs text-gray-600 font-semibold bg-gray-50">
                 <tr>
                     <th rowSpan={2} scope="col" className="px-4 py-3 align-middle text-left">姓名</th>
-                    <th rowSpan={2} scope="col" className="px-4 py-3 align-middle text-left border-r border-gray-200">人员信息</th>
+                    <th rowSpan={2} scope="col" className="px-4 py-3 align-middle text-left border-r border-gray-200">
+                        <div className="flex items-center group relative">
+                            <span>人员信息</span>
+                            <Icon name="informationCircle" className="w-4 h-4 text-gray-400 ml-1" />
+                            <div className="absolute left-0 bottom-full mb-2 w-max px-2 py-1 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                悬停下方单元格查看详细信息
+                            </div>
+                        </div>
+                    </th>
                     <th colSpan={4} scope="colgroup" className="px-4 py-3 text-center border-x border-gray-200">个人所得明细</th>
                     <th colSpan={3} scope="colgroup" className="px-4 py-3 text-center border-x border-gray-200">平台及税务费用</th>
-                    <th rowSpan={2} scope="col" className="px-4 py-3 text-right align-middle">税后总金额</th>
+                    <th rowSpan={2} scope="col" className="px-4 py-3 text-right align-middle">
+                        <div className="flex items-center justify-end group relative">
+                            <span>税后总金额</span>
+                            <span className="text-gray-400 ml-1">*</span>
+                            <div className="absolute right-0 bottom-full mb-2 w-max px-2 py-1 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                此金额为试算结果
+                            </div>
+                        </div>
+                    </th>
                     <th rowSpan={2} scope="col" className="px-4 py-3 text-right align-middle bg-gray-100 border-x border-gray-200">订单总金额</th>
                     <th rowSpan={2} scope="col" className="px-4 py-3 text-center align-middle border-l border-gray-200">操作</th>
                 </tr>
@@ -291,10 +307,10 @@ const MainContent: React.FC = () => {
     }, { totalOrderAmount: 0, totalAmountDue: 0, serviceFee: 0, taxes: 0 });
 
     const steps: Step[] = [
-        { name: '创建订单', icon: DocumentAddIcon, status: 'completed' },
-        { name: '业务确认', icon: ClipboardCheckIcon, status: 'current' },
-        { name: '付款确认', icon: CreditCardIcon, status: 'upcoming' },
-        { name: '完成', icon: CheckCircleIcon, status: 'upcoming' },
+        { name: '创建订单', icon: 'documentAdd', status: 'completed' },
+        { name: '业务确认', icon: 'clipboardCheck', status: 'current' },
+        { name: '付款确认', icon: 'creditCard', status: 'upcoming' },
+        { name: '完成', icon: 'checkCircle', status: 'upcoming' },
     ];
 
     const selectedPerson = selectedPersonIndex !== null ? tableData[selectedPersonIndex] : null;
@@ -319,10 +335,10 @@ const MainContent: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <SummaryCard title="订单总金额" amount={totals.totalOrderAmount} icon={WalletIcon} />
-                <SummaryCard title="应发总金额" amount={totals.totalAmountDue} icon={DocumentTextIcon} />
-                <SummaryCard title="总服务费" amount={totals.serviceFee} icon={BriefcaseIcon} />
-                <SummaryCard title="总税费" amount={totals.taxes} icon={ScaleIcon} />
+                <SummaryCard title="订单总金额" amount={totals.totalOrderAmount} icon="wallet" />
+                <SummaryCard title="应发总金额" amount={totals.totalAmountDue} icon="documentText" />
+                <SummaryCard title="总服务费" amount={totals.serviceFee} icon="briefcase" />
+                <SummaryCard title="总税费" amount={totals.taxes} icon="scale" />
             </div>
             
             <DataTable data={tableData} onAmountChange={handleAmountChange} onTotalAmountChange={handleTotalAmountChange} onDetailsClick={handleOpenDetails} />

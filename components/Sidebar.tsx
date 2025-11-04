@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { HomeIcon, DollarIcon, GridIcon, MailIcon, UserGroupIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
+import { Icon } from './Icons';
 
 // FIX: Made the `icon` prop optional to support sub-links without icons.
 const NavLink: React.FC<{ icon?: React.ReactNode; text: string; active?: boolean; hasNotification?: boolean }> = ({ icon, text, active = false, hasNotification = false }) => (
@@ -22,7 +22,7 @@ const CollapsibleLink: React.FC<{ icon: React.ReactNode; text: string; children?
         {icon}
         <span className="ml-3">{text}</span>
         <span className="ml-auto">
-            {isOpen ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
+            {isOpen ? <Icon name="chevronUp" className="w-4 h-4" /> : <Icon name="chevronDown" className="w-4 h-4" />}
         </span>
       </button>
       {isOpen && (
@@ -42,19 +42,19 @@ const Sidebar: React.FC = () => {
         <h1 className="text-lg font-bold text-gray-800">班步协作 云平台</h1>
       </div>
       <nav className="flex-1 px-4 py-4 space-y-2">
-        <NavLink icon={<HomeIcon className="w-5 h-5" />} text="工作台" />
-        <CollapsibleLink icon={<DollarIcon className="w-5 h-5" />} text="业务订单" defaultOpen={true}>
+        <NavLink icon={<Icon name="home" className="w-5 h-5" />} text="工作台" />
+        <CollapsibleLink icon={<Icon name="dollar" className="w-5 h-5" />} text="业务订单" defaultOpen={true}>
             <NavLink text="业务确认" active={true} />
             <NavLink text="发放状态" hasNotification={true} />
             <NavLink text="发放流水" />
         </CollapsibleLink>
-        <CollapsibleLink icon={<GridIcon className="w-5 h-5" />} text="外包信息">
+        <CollapsibleLink icon={<Icon name="grid" className="w-5 h-5" />} text="外包信息">
             {/* Add sub-links here if needed */}
         </CollapsibleLink>
-        <CollapsibleLink icon={<MailIcon className="w-5 h-5" />} text="合规信息">
+        <CollapsibleLink icon={<Icon name="mail" className="w-5 h-5" />} text="合规信息">
             {/* Add sub-links here if needed */}
         </CollapsibleLink>
-        <CollapsibleLink icon={<UserGroupIcon className="w-5 h-5" />} text="账户信息">
+        <CollapsibleLink icon={<Icon name="userGroup" className="w-5 h-5" />} text="账户信息">
             {/* Add sub-links here if needed */}
         </CollapsibleLink>
       </nav>

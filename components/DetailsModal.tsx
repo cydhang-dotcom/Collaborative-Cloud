@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Person } from '../types';
-import { XIcon } from './Icons';
+import { Icon } from './Icons';
 
 const DetailRowInput: React.FC<{ label: string; value: number; onChange: (value: number) => void }> = ({ label, value, onChange }) => (
     <div className="flex justify-between items-center py-2">
@@ -95,7 +95,7 @@ const DetailsModal: React.FC<{
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-gray-900">详细费用明细 - {person.name}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <XIcon className="w-6 h-6" />
+                        <Icon name="x" className="w-6 h-6" />
                     </button>
                 </div>
                 

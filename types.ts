@@ -1,5 +1,13 @@
 import React from 'react';
 
+export type IconName =
+  | 'home' | 'dollar' | 'grid' | 'mail' | 'userGroup' | 'chevronUp'
+  | 'chevronDown' | 'phone' | 'bell' | 'userCircle' | 'pencil'
+  | 'documentAdd' | 'clipboardCheck' | 'creditCard' | 'checkCircle'
+  | 'wallet' | 'documentText' | 'briefcase' | 'scale' | 'checkCircleSolid'
+  | 'x' | 'informationCircle';
+
+
 export interface Person {
   name: string;
   id: string;
@@ -20,6 +28,6 @@ export interface Person {
 
 export interface Step {
   name:string;
-  icon: React.FC<{ className?: string }>;
+  icon: IconName;
   status: 'completed' | 'current' | 'upcoming';
 }
