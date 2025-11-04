@@ -201,8 +201,8 @@ const MainContent: React.FC = () => {
     };
 
     const initialDataRaw: RawPerson[] = [
-      { name: '徐晨露', id: '320322199212170029', phone: '15002106134', task: 'UI设计服务', bank: '中国银行', accountNumber: '6217850800019685732', laborRemuneration: 1500, businessIncome: 5100.60, soleProprietorIncome: 3400.40 },
-      { name: '陈莉', id: '320681198911010085', phone: '15001974427', task: '后端开发', bank: '招商银行', accountNumber: '6214852114742441', laborRemuneration: 8000, businessIncome: 0, soleProprietorIncome: 4000 },
+      { name: '徐露', id: '311322199612170031', phone: '15112106134', task: 'UI设计服务', bank: '中国银行', accountNumber: '6217850800019685732', laborRemuneration: 1500, businessIncome: 5100.60, soleProprietorIncome: 3400.40 },
+      { name: '陈晨莉', id: '311681199111010031', phone: '15661974427', task: '后端开发', bank: '招商银行', accountNumber: '6214852114742441', laborRemuneration: 8000, businessIncome: 0, soleProprietorIncome: 4000 },
     ];
     
     const initialDataRef = useRef(initialDataRaw.map(calculateFinancials));
