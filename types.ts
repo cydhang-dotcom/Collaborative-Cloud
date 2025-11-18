@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type PageName = 'confirmation' | 'issuance';
+export type PageName = 'pre-confirmation' | 'confirmation' | 'issuance';
 
 export type IconName =
   | 'home' | 'dollar' | 'grid' | 'mail' | 'userGroup' | 'chevronUp'
@@ -8,7 +8,7 @@ export type IconName =
   | 'documentAdd' | 'clipboardCheck' | 'creditCard' | 'checkCircle'
   | 'wallet' | 'documentText' | 'briefcase' | 'scale' | 'checkCircleSolid'
   | 'x' | 'informationCircle' | 'paperAirplane' | 'eye'
-  | 'refresh' | 'chevronLeft' | 'chevronRight' | 'triangle';
+  | 'refresh' | 'chevronLeft' | 'chevronRight' | 'triangle' | 'cloudUpload';
 
 
 export interface Person {

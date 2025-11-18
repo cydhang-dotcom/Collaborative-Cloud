@@ -45,7 +45,7 @@ const Sidebar: React.FC<{ page: PageName }> = ({ page }) => {
       <nav className="flex-1 px-4 py-4 space-y-2">
         <NavLink icon={<Icon name="home" className="w-5 h-5" />} text="工作台" />
         <CollapsibleLink icon={<Icon name="dollar" className="w-5 h-5" />} text="业务订单" defaultOpen={true}>
-            <NavLink text="业务确认" active={page === 'confirmation'} />
+            <NavLink text="业务确认" active={page === 'pre-confirmation' || page === 'confirmation'} />
             <NavLink text="发放状态" hasNotification={true} active={page === 'issuance'} />
             <NavLink text="发放流水" />
         </CollapsibleLink>

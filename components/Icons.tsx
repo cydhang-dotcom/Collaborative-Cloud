@@ -31,6 +31,7 @@ const iconPaths: Record<IconName, { path: React.JSX.Element; viewBox?: string; f
     chevronLeft: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /> },
     chevronRight: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /> },
     triangle: { path: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2.25L2.25 21h19.5L12 2.25z" /> },
+    cloudUpload: { path: <><path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M12 12v9" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-3-3-3 3" /></> },
 };
 
 interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, 'name'> {

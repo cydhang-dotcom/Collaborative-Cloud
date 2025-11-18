@@ -4,7 +4,114 @@ import { Icon } from './Icons';
 import Stepper from './Stepper';
 import DetailsModal from './DetailsModal';
 
-const BusinessConfirmationPage: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+const PreConfirmationPage: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+    const steps: Step[] = [
+        { name: '业务确认', icon: 'cloudUpload', status: 'current' },
+        { name: '平台风控', icon: 'eye', status: 'upcoming' },
+        { name: '确认发放', icon: 'checkCircle', status: 'upcoming' },
+        { name: '发放中', icon: 'checkCircle', status: 'upcoming' },
+        { name: '发放完成', icon: 'checkCircle', status: 'upcoming' },
+    ];
+
+    const tasks = [
+        { id: 1, name: '项目管理服务', peopleCount: 8, people: '冯振忠 | 王臻 | 孙俊才 | 季建华 | 蔡军 | ...', supplier: '上海云才网络技术有限公司 (线路20)' },
+        { id: 2, name: '工艺流程设计', peopleCount: 2, people: '朱浩 | 刘静', supplier: '上海云才网络技术有限公司 (线路20)' }
+    ];
+
+    const [selectedDate, setSelectedDate] = useState('2025-11');
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedRows(tasks.map(t => t.id));
+        } else {
+            setSelectedRows([]);
+        }
+    };
+
+    const handleSelectRow = (id: number) => {
+        setSelectedRows(prev => 
+            prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+        );
+    };
+
+    const isAllSelected = tasks.length > 0 && selectedRows.length === tasks.length;
+
+    return (
+        <div className="bg-white p-8 rounded-xl shadow-md">
+            <div className="mb-12">
+                <Stepper steps={steps} />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">业务确认</h2>
+
+            <div className="space-y-6 mb-8">
+                <div className="flex items-center">
+                    <label className="text-sm font-medium text-gray-700 w-24 flex-shrink-0"><span className="text-red-500 mr-1">*</span>发放月份</label>
+                    <div className="flex items-center">
+                        <button className="p-2 text-gray-500 rounded-md hover:bg-gray-100">
+                            <Icon name="chevronLeft" className="w-5 h-5" />
+                        </button>
+                        <span className="mx-4 font-medium text-gray-800">{selectedDate}</span>
+                        <button className="p-2 text-gray-500 rounded-md hover:bg-gray-100">
+                            <Icon name="chevronRight" className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+                <div className="flex items-center">
+                    <label className="text-sm font-medium text-gray-700 w-24 flex-shrink-0"><span className="text-red-500 mr-1">*</span>任务类型</label>
+                    <div className="flex items-center space-x-2">
+                        <div className="flex items-center px-3 py-1.5 border border-teal-500 bg-teal-50 rounded-full cursor-pointer">
+                             <div className="w-4 h-4 rounded-full bg-teal-500 border-2 border-white ring-2 ring-teal-500"></div>
+                            <span className="ml-2 text-sm text-teal-700 font-medium">经营所得(2)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-gray-600 font-semibold">
+                        <tr>
+                            <th className="px-4 py-3 text-left w-12">
+                                <input type="checkbox" onChange={handleSelectAll} checked={isAllSelected} className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500" />
+                            </th>
+                            <th className="px-4 py-3 text-left font-bold">任务名称</th>
+                            <th className="px-4 py-3 text-left">任务人数</th>
+                            <th className="px-4 py-3 text-left">任务人员</th>
+                            <th className="px-4 py-3 text-left">供应商</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-gray-800">
+                        {tasks.map((task) => (
+                            <tr key={task.id} className="border-b last:border-0 hover:bg-gray-50">
+                                <td className="px-4 py-4">
+                                    <input type="checkbox" checked={selectedRows.includes(task.id)} onChange={() => handleSelectRow(task.id)} className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500" />
+                                </td>
+                                <td className="px-4 py-4 font-medium">{task.name}</td>
+                                <td className="px-4 py-4">{task.peopleCount}</td>
+                                <td className="px-4 py-4 text-gray-600">{task.people}</td>
+                                <td className="px-4 py-4 text-gray-600">{task.supplier}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="mt-8 flex justify-start">
+                <button 
+                    onClick={onNext} 
+                    disabled={selectedRows.length === 0}
+                    className="px-8 py-2 text-base font-medium bg-teal-500 text-white rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-sm hover:shadow-md transition-all disabled:bg-gray-300 disabled:cursor-not-allowed">
+                    业务确认
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
+const BusinessConfirmationPage: React.FC<{ onNext: () => void; onBack: () => void }> = ({ onNext, onBack }) => {
     type RawPerson = Omit<Person, 'totalAmountDue' | 'serviceFee' | 'personalIncomeTax' | 'vat' | 'totalOrderAmount' | 'netAmount'>
 
     const calculateFinancials = (person: RawPerson): Person => {
@@ -176,7 +283,7 @@ const BusinessConfirmationPage: React.FC<{ onNext: () => void }> = ({ onNext }) 
                     <button className="px-4 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50">作废订单</button>
                 </div>
                 <div className="flex items-center space-x-3">
-                    <button className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">上一步</button>
+                    <button onClick={onBack} className="px-5 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">上一步</button>
                     <button onClick={onNext} className="px-8 py-2 text-sm font-medium bg-teal-500 text-white rounded-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-sm hover:shadow-md transition-shadow">下一步</button>
                 </div>
             </div>
@@ -634,11 +741,14 @@ interface MainContentProps {
 }
 
 const MainContent: React.FC<MainContentProps> = ({ page, setPage }) => {
+    if (page === 'pre-confirmation') {
+        return <PreConfirmationPage onNext={() => setPage('confirmation')} />;
+    }
     if (page === 'issuance') {
         return <IssuanceDetailsPage onBack={() => setPage('confirmation')} />;
     }
     
-    return <BusinessConfirmationPage onNext={() => setPage('issuance')} />;
+    return <BusinessConfirmationPage onNext={() => setPage('issuance')} onBack={() => setPage('pre-confirmation')} />;
 };
 
 export default MainContent;

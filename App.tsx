@@ -6,7 +6,7 @@ import MainContent from './components/MainContent';
 import { PageName } from './types';
 
 const App: React.FC = () => {
-  const [page, setPage] = useState<PageName>('confirmation');
+  const [page, setPage] = useState<PageName>('pre-confirmation');
 
   return (
     <div className="flex h-screen bg-white text-gray-800">

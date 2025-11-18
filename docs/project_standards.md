@@ -80,6 +80,16 @@
 ## 6. 可访问性 (A11y)
 
 -   **语义化 HTML**: 使用语义化的 HTML5 元素 (`<nav>`, `<main>`, `<header>` 等) 来正确构建应用结构。
--   **ARIA 角色**: 在必要时使用 ARIA (Accessible Rich Internet Applications) 角色和属性，为屏幕阅读器提供上下文，特别是对于复杂的交互式组件，如弹窗和自定义下拉菜单。
+-   **ARIA 角色**: 在必要时使用 ARIA (Accessible Rich Internet Applications) 角色和属性，为屏幕阅读器提供上下文，特别是对于复杂的交互式组件，如弹窗 (`role="dialog"`, `aria-modal="true"`) 和自定义下拉菜单。
 -   **键盘导航**: 确保所有交互元素都可以仅通过键盘访问和操作。
 -   **焦点管理**: 合理管理焦点，尤其是在弹窗和弹出层中。当弹窗打开时，焦点应移入其中。当它关闭时，焦点应返回到触发它的元素上。
+
+## 7. 项目结构
+
+项目遵循标准的 React 应用结构，以实现关注点分离：
+
+-   `index.html`, `index.tsx`: 应用的入口点。
+-   `App.tsx`: 顶层应用组件，管理主要布局和页面路由。
+-   `types.ts`: 存放整个应用共享的 TypeScript 类型定义。
+-   `/components`: 包含所有 React 组件。通用组件 (如 `Icon`, `Stepper`) 和特定页面的组件都在此目录下。
+-   `/docs`: 包含项目文档、设计标准和页面功能说明。
